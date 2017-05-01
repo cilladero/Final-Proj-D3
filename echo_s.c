@@ -13,11 +13,26 @@ process for each connection*/
 #include <signal.h>
 #include <arpa/inet.h>
 #include "echo_s_functions.h"
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
-void sigHandler(int sig)
-{
-	print("\necho_s is stopping\n");
-}
+ void  SIGINT_handler(int sig)
+ {
+      key_t MyKey = ftok(".", 's');
+      int   ShmID = shmget(MyKey, sizeof(pid_t), 0666);
+      pid_t *ShmPTR;
+      ShmPTR  = (pid_t *) shmat(ShmID, NULL, 0);
+      pid_t pids = *ShmPTR;
+      shmdt(ShmPTR);
+
+      signal(sig, SIG_IGN);
+      printf("\n");
+      kill(pids, SIGINT);
+      exit(0);
+
+ }
+
+
 
 int main(int argc, char *argv[])
 {
@@ -27,7 +42,11 @@ int main(int argc, char *argv[])
 	struct sockaddr_in log_addr;
 	fd_set sockfds;
 
-	signal(SIGINT, sigHandler);
+	if (signal(SIGINT, SIGINT_handler) == SIG_ERR) {
+           printf("SIGINT install error\n");
+           exit(1);
+      }
+	
 
 	//check arguments if there is a port provided
 	chkArgument(argc, argv[0]);
@@ -37,7 +56,7 @@ int main(int argc, char *argv[])
 
 	bzero((char *) &log_addr, sizeof(log_addr));
 	log_addr.sin_family = AF_INET;
-	
+	/*	
 	if(argc == 6)
 		log_addr.sin_addr.s_addr = inet_addr(argv[3]);
 
@@ -55,7 +74,18 @@ int main(int argc, char *argv[])
 
 	else if (argc == 8 && strcmp(argv[6], "-logport") == 0)
 		log_addr.sin_port = htons(atoi(argv[7]));
-
+	*/
+	log_addr.sin_port = htons(9999);
+	log_addr.sin_addr.s_addr = INADDR_ANY;
+	int i;
+        for(i=1; i < argc;i++){
+                if(strcmp(argv[i], "-logport") == 0){
+                                log_addr.sin_port = htons(atoi(argv[i+1]));
+                }
+                if(strcmp(argv[i], "-logip") == 0){
+                                log_addr.sin_addr.s_addr = inet_addr(argv[i+1]);
+                }
+        }
 	if (connect(sockL,(struct sockaddr *)&log_addr,sizeof(log_addr)) < 0)
 		error("ERROR connecting");
 
