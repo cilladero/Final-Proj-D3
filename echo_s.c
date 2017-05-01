@@ -13,6 +13,11 @@ process for each connection*/
 #include <signal.h>
 #include "echo_s_functions.h"
 
+void sigHandler(int sig)
+{
+	print("\necho_s is stopping\n");
+}
+
 int main(int argc, char *argv[])
 {
 	int sockfd, sockfd2, length, newsockfd, portno, pid, pid2, sockL;
@@ -20,6 +25,8 @@ int main(int argc, char *argv[])
 	struct sockaddr_in serv_addr, cli_addr;
 	struct sockaddr_in log_addr;
 	fd_set sockfds;
+
+	signal(SIGINT, sigHandler);
 
 	//check arguments if there is a port provided
 	chkArgument(argc, argv[0]);
