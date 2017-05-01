@@ -11,6 +11,7 @@ process for each connection*/
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <arpa/inet.h>
 #include "echo_s_functions.h"
 
 int main(int argc, char *argv[])
@@ -30,27 +31,33 @@ int main(int argc, char *argv[])
 	bzero((char *) &log_addr, sizeof(log_addr));
 	log_addr.sin_family = AF_INET;
 	
-
-	if(argc == 4)
+	if(argc == 6)
 		log_addr.sin_addr.s_addr = inet_addr(argv[3]);
-	else if(argc == 5)
-		log_addr.sin_addr.s_addr = inet_addr(argv[4]);
-	else if(argc == 6)
-		log_addr.sin_addr.s_addr = inet_addr(argv[5]);
-	else
-		log_addr.sin_addr.s_addr = INADDR_ANY;
-	log_addr.sin_port = htons(44442);
 
+	else if(argc == 7)
+		log_addr.sin_addr.s_addr = inet_addr(argv[4]);
+
+	else
+		log_addr.sin_addr.s_addr = inet_addr(argv[5]);
+
+	if (argc == 6 && strcmp(argv[4], "-logport") == 0)
+		log_addr.sin_port = htons(atoi(argv[5]));
+
+	else if (argc == 7 && strcmp(argv[5], "-logport") == 0)
+		log_addr.sin_port = htons(atoi(argv[6]));
+
+	else if (argc == 8 && strcmp(argv[6], "-logport") == 0)
+		log_addr.sin_port = htons(atoi(argv[7]));
 
 	if (connect(sockL,(struct sockaddr *)&log_addr,sizeof(log_addr)) < 0)
-  		error("ERROR connecting");
+		error("ERROR connecting");
 
 	pid = fork();
 	if(pid != 0)
 	{
 		pid2 = fork();
 	}
-	if (argc >=3 && pid ==0)
+	if (argc >=7 && pid ==0)
 	{
 		portno = atoi(argv[2]);
 
@@ -65,11 +72,11 @@ int main(int argc, char *argv[])
 			sockfd2 = socket(AF_INET, SOCK_DGRAM, 0);
 			chkBind2(sockfd2, serv_addr, length);
 	}
-	else if(argc < 3 && pid ==0)
+	else if(argc < 7 && pid ==0)
 	{
 		exit(0);
 	}
-	else if(argc == 4 && pid2 ==0)
+	else if(argc == 8 && pid2 ==0)
 	{
 		bzero((char *) &serv_addr, sizeof(serv_addr));
 			portno = atoi(argv[3]);
@@ -84,7 +91,7 @@ int main(int argc, char *argv[])
 			sockfd2 = socket(AF_INET, SOCK_DGRAM, 0);
 			chkBind2(sockfd2, serv_addr, length);
 	}
-	else if(argc < 4 && pid2==0)
+	else if(argc < 8 && pid2==0)
 	{
 		exit(0);
 	}
