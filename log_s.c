@@ -14,6 +14,10 @@ server runs forever.*/
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <signal.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <arpa/inet.h>
 
 //Method to print error message
 void error(const char *msg)
@@ -21,6 +25,8 @@ void error(const char *msg)
 	perror(msg);
 	exit(0);
 }
+
+void SIGINT_handler(int);
 
 int main(int argc, char *argv[])
 {
@@ -31,6 +37,21 @@ int main(int argc, char *argv[])
 	struct sockaddr_in from;
 	char buf[1024];
 	FILE *fp;
+	
+	pid_t pid = getpid();
+        key_t MyKey;
+        int   ShmID;
+        pid_t *ShmPTR;
+        MyKey   = ftok(".", 's');     /* create a shared memory segment*/
+        ShmID   = shmget(MyKey, sizeof(pid_t), IPC_CREAT | 0666);
+        ShmPTR  = (pid_t *) shmat(ShmID, NULL, 0);
+        *ShmPTR = pid;
+   
+        if (signal(SIGINT, SIGINT_handler) == SIG_ERR) {
+          printf("SIGINT install error\n");
+          exit(1);
+        }
+
 
 	//Error if no arguments
 	if(argc < 1)
@@ -54,26 +75,13 @@ int main(int argc, char *argv[])
 	//if it was then it would be assigned if not the port number would
 	//be set to 9999 as default
 	//for the communication between echo_s and log_s
-	char str [] = "port";
-	int len = sizeof(argv);
-	bool found = false;
-	int comp;
-	
-	for(int i = 0; i < len; i++)
-	{
-		comp = strcmp(str, argv[i]);
-		
-		if(comp == 0)
-		{
-			//Argument found
-			found = true;
-			int portNum = atoi(argv[++i]);
-			server.sin_port=htons(portNum);
-		}	
-	}
-	//Argument not found
-	if(found == false)
-		server.sin_port=htons(9999);
+	int i;
+	server.sin_port=htons(9999);
+	for(i=1; i<argc;i++){
+                         if(strcmp(argv[i], "-port") == 0){
+                                         server.sin_port=htons(atoi(argv[i+1]));
+                         }
+         }
 
 
 	//Binding error
@@ -112,3 +120,14 @@ int main(int argc, char *argv[])
 	}
 	return 0;
  }
+
+void  SIGINT_handler(int sig){
+     signal(sig, SIG_IGN);
+     printf("echo_s is stopping\n");
+      FILE *fp1;
+      fp1 = fopen("echo.log", "a");
+      fprintf(fp1, "echo_s is stopping");
+      fprintf(fp1,"\n");
+      exit(3);
+}
+
