@@ -11,6 +11,8 @@ server runs forever.*/
 #include <string.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 //Method to print error message
@@ -48,9 +50,31 @@ int main(int argc, char *argv[])
 	server.sin_family=AF_INET;
 	server.sin_addr.s_addr=INADDR_ANY;
 
-	//The number in the parentheses is the port number used
-	//for the communication between echo_s.c and log_s.c
-	server.sin_port=htons(9999);
+	//Algorithm used to see if a port number was given as an argument
+	//if it was then it would be assigned if not the port number would
+	//be set to 9999 as default
+	//for the communication between echo_s and log_s
+	char str [] = "port";
+	int len = sizeof(argv);
+	bool found = false;
+	int comp;
+	
+	for(int i = 0; i < len; i++)
+	{
+		comp = strcmp(str, argv[i]);
+		
+		if(comp == 0)
+		{
+			//Argument found
+			found = true;
+			int portNum = atoi(argv[++i]);
+			server.sin_port=htons(portNum);
+		}	
+	}
+	//Argument not found
+	if(found == false)
+		server.sin_port=htons(9999);
+
 
 	//Binding error
 	if(bind(sock,(struct sockaddr *)&server,length)<0)
