@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 	{
 		//Open file (create child process)
 		fp = fopen("echo.log", "a");
-		bzero(buf, 256);
+		bzero(buf, 1024);
 		n = recvfrom(sock,buf,1024,0,(struct sockaddr *)&from,&fromlen);
 
 		//Receiving error

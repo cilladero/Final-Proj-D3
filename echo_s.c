@@ -56,27 +56,10 @@ int main(int argc, char *argv[])
 
 	bzero((char *) &log_addr, sizeof(log_addr));
 	log_addr.sin_family = AF_INET;
-	/*	
-	if(argc == 6)
-		log_addr.sin_addr.s_addr = inet_addr(argv[3]);
-
-	else if(argc == 7)
-		log_addr.sin_addr.s_addr = inet_addr(argv[4]);
-
-	else
-		log_addr.sin_addr.s_addr = inet_addr(argv[5]);
-
-	if (argc == 6 && strcmp(argv[4], "-logport") == 0)
-		log_addr.sin_port = htons(atoi(argv[5]));
-
-	else if (argc == 7 && strcmp(argv[5], "-logport") == 0)
-		log_addr.sin_port = htons(atoi(argv[6]));
-
-	else if (argc == 8 && strcmp(argv[6], "-logport") == 0)
-		log_addr.sin_port = htons(atoi(argv[7]));
-	*/
 	log_addr.sin_port = htons(9999);
 	log_addr.sin_addr.s_addr = INADDR_ANY;
+
+	//check for -logip and -logport options
 	int i;
         for(i=1; i < argc;i++){
                 if(strcmp(argv[i], "-logport") == 0){
@@ -200,3 +183,4 @@ int main(int argc, char *argv[])
 
 	return 0;
 }
+
