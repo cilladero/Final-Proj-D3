@@ -29,8 +29,18 @@ int main(int argc, char *argv[])
 
 	bzero((char *) &log_addr, sizeof(log_addr));
 	log_addr.sin_family = AF_INET;
-	log_addr.sin_addr.s_addr = INADDR_ANY;
-	log_addr.sin_port = htons(9999);
+	
+
+	if(argc == 4)
+		log_addr.sin_addr.s_addr = inet_addr(argv[3]);
+	else if(argc == 5)
+		log_addr.sin_addr.s_addr = inet_addr(argv[4]);
+	else if(argc == 6)
+		log_addr.sin_addr.s_addr = inet_addr(argv[5]);
+	else
+		log_addr.sin_addr.s_addr = INADDR_ANY;
+	log_addr.sin_port = htons(44442);
+
 
 	if (connect(sockL,(struct sockaddr *)&log_addr,sizeof(log_addr)) < 0)
   		error("ERROR connecting");
